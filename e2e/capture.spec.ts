@@ -24,7 +24,7 @@ test("check-out: six photos through the phone camera app", async ({ page }) => {
   await expect(page).toHaveURL("/");
 });
 
-test("return: live ghost camera, retake loop, then the report", async ({ page }) => {
+test("return: a photo from files, live ghost camera, retake loop, then the report", async ({ page }) => {
   await mockPhotoUpload(page);
   await mockPhotoFiles(page);
   await mockInspect(page, RETURN_RENTAL, [{ rear: "Too dark to compare" }, {}]);
@@ -34,11 +34,19 @@ test("return: live ghost camera, retake loop, then the report", async ({ page })
 
   // Chromium's fake device feeds the live view; the check-out photo sits on top.
   await expect(page.getByTestId("live-camera")).toBeVisible();
-  for (const title of TITLES) {
+  for (const [i, title] of TITLES.entries()) {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
-    await page.getByRole("button", { name: "Take photo" }).click();
+    if (i === 0) {
+      // A photo already on the device, from Downloads or the library.
+      const chooser = page.waitForEvent("filechooser");
+      await page.getByRole("button", { name: "Choose from files" }).click();
+      await (await chooser).setFiles(PHOTO_FILE);
+    } else {
+      await page.getByRole("button", { name: "Take photo" }).click();
+    }
     await page.getByRole("button", { name: "Use photo" }).click();
   }
+  await expect(page.getByTestId("live-camera")).toBeAttached();
 
   await page.getByRole("button", { name: "Run damage check" }).click();
   await expect(page.getByRole("heading", { name: "Checking for damage" })).toBeVisible();
