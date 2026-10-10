@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import type { Page } from "@playwright/test";
-import { E2E_RENTALS, PHOTO_FILE, SLOTS } from "./fixtures";
+import { E2E_RENTALS, E2E_REPORT, PHOTO_FILE, REPORT_ID, SLOTS } from "./fixtures";
 
 // Network-level mocks only: the app itself has no mock mode.
 
@@ -57,4 +57,34 @@ export async function mockInspect(page: Page, rentalId: string, rounds: Record<s
     await new Promise((r) => setTimeout(r, 1500));
     await route.fulfill({ json: report(`RPT-E2E-${call}`, rentalId, retake) });
   });
+}
+
+// Confirming the e2e finding: the PATCH answers with it confirmed and the
+// invoice gains its line.
+export async function mockReview(page: Page): Promise<void> {
+  const confirmed = {
+    ...E2E_REPORT,
+    findings: E2E_REPORT.findings.map((f) => ({ ...f, status: "confirmed" })),
+  };
+  await page.route(`**/api/inspect/${REPORT_ID}/findings/*`, (route) => route.fulfill({ json: confirmed }));
+  await page.route(`**/api/invoice/${REPORT_ID}`, (route) =>
+    route.fulfill({
+      json: {
+        reportId: REPORT_ID,
+        rentalId: E2E_REPORT.rentalId,
+        currency: "EUR",
+        lines: [
+          {
+            findingId: "F-E2E-1",
+            description: "Scratch (minor), front: front blade, left corner",
+            priceKey: "scratch/minor",
+            amount: 45,
+            beforePhotoId: "E2E-front",
+            afterPhotoId: "E2E-front",
+          },
+        ],
+        total: 45,
+      },
+    }),
+  );
 }

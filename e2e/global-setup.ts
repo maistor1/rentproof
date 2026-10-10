@@ -1,6 +1,15 @@
 import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import sharp from "sharp";
-import { BACKUP_FILE, E2E_DIR, E2E_RENTALS, LOCAL_FILE, PHOTO_FILE, SEED_FILE } from "./fixtures";
+import {
+  BACKUP_FILE,
+  E2E_DIR,
+  E2E_RENTALS,
+  E2E_REPORT,
+  LOCAL_FILE,
+  PHOTO_FILE,
+  REPORT_FILE,
+  SEED_FILE,
+} from "./fixtures";
 
 async function readRentals(file: string): Promise<{ id: string }[] | undefined> {
   try {
@@ -29,4 +38,5 @@ export default async function globalSetup(): Promise<void> {
     .jpeg()
     .toBuffer();
   await writeFile(PHOTO_FILE, jpeg);
+  await writeFile(REPORT_FILE, JSON.stringify(E2E_REPORT, null, 2) + "\n");
 }

@@ -1,9 +1,10 @@
 import { access, copyFile, rm } from "node:fs/promises";
-import { BACKUP_FILE, LOCAL_FILE } from "./fixtures";
+import { BACKUP_FILE, LOCAL_FILE, REPORT_FILE } from "./fixtures";
 
 // Restore the app's working copy, or remove it if there was none before.
 // If a run is killed before this, `npm run reset-data` goes back to the seed.
 export default async function globalTeardown(): Promise<void> {
+  await rm(REPORT_FILE, { force: true });
   const hadLocal = await access(BACKUP_FILE).then(
     () => true,
     () => false,

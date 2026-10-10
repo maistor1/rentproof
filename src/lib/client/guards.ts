@@ -1,5 +1,5 @@
 import { isSlot } from "@/lib/slots";
-import type { DamageReport, Photo, Rental } from "@/lib/types";
+import type { DamageReport, Invoice, Photo, Rental } from "@/lib/types";
 
 // Minimal shape checks for API replies. Enough to fail with a clear message
 // instead of crashing deep inside a component.
@@ -36,5 +36,15 @@ export function isRental(value: unknown): value is Rental {
     typeof value.id === "string" &&
     typeof value.status === "string" &&
     isRecord(value.photos)
+  );
+}
+
+export function isInvoice(value: unknown): value is Invoice {
+  return (
+    isRecord(value) &&
+    typeof value.reportId === "string" &&
+    typeof value.currency === "string" &&
+    typeof value.total === "number" &&
+    Array.isArray(value.lines)
   );
 }
