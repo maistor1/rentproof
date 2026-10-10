@@ -4,7 +4,7 @@ import { formatSlotList, missingSlots } from "@/lib/slots";
 import { getRental } from "@/lib/storage";
 import { ReturnFlow } from "./ReturnFlow";
 
-// Reads rentals.json per request, like the home page.
+// Reads the rental files per request, like the home page.
 export const dynamic = "force-dynamic";
 
 // RP-9: capture the six return photos against the check-out photos, then run

@@ -34,12 +34,13 @@ Tasks are tracked as GitHub issues (RP-1 to RP-17), labelled by area.
 src/
   app/
     page.tsx                         rental list (home)
+    rentals/new/page.tsx             New rental form
     checkout/[rentalId]/page.tsx     RP-4  Daniel
     return/[rentalId]/page.tsx       RP-9  Daniel
     report/[inspectionId]/page.tsx   RP-12 Boris
     evidence/[inspectionId]/page.tsx RP-13 Boris
     api/
-      rentals/                       GET list, GET by id
+      rentals/                       GET list, POST create, GET by id
       rentals/[rentalId]/return/     RP-7  Boris  POST record return (mocked telematics)
       photos/route.ts                RP-5  Boris  POST upload + resize
       photos/[photoId]/              RP-5  Boris  GET the JPEG
@@ -58,7 +59,7 @@ src/
     telematics.ts                    mocked ISO 15143-3     Boris
   components/                        shared UI
 data/
-  rentals.json                       seeded demo rental
+  rentals.json                       app seed, empty: rentals are created in the app
   price-table.json                   sample prices (say so on stage)
   photos/  inspections/              runtime output, gitignored
 test-set/scenarios.md                20-scenario accuracy log  maistor1
@@ -75,6 +76,7 @@ API surface everyone can rely on:
 | Route | Method | In | Out |
 | --- | --- | --- | --- |
 | `/api/rentals` | GET | | `Rental[]` |
+| `/api/rentals` | POST | `{ machine: { name, model, serialNumber }, customer: { name, email } }` | `Rental` (201, status `out`, check-out hours from telematics) |
 | `/api/rentals/:id` | GET | | `Rental` |
 | `/api/rentals/:id/return` | POST | optional `{ hoursUsed }` | `Rental` (status `returned`, telematics attached; safe to repeat) |
 | `/api/photos` | POST | form: `rentalId`, `slot`, `phase`, `file` | `Photo` |
@@ -89,15 +91,25 @@ or 415. Upload JPEG or PNG (`accept="image/jpeg,image/png"`); HEIC gets a 415.
 
 ## Data
 
-`data/rentals.json` is the seed and is never written. The app keeps its
-state in `data/rentals.local.json`, `data/photos/` and `data/inspections/`,
-all gitignored. Run `npm run reset-data` to go back to the seed, for example
-before a rehearsal.
+`data/rentals.json` is the seed and is never written. It is empty: a fresh
+install starts with no rentals, and staff create one with **New rental** on the
+home page. The app keeps its state in `data/rentals.local.json`, `data/photos/`
+and `data/inspections/`, all gitignored. Run `npm run reset-data` to go back to
+an empty list, for example before a rehearsal. Unit tests use their own seed
+(`src/test/seed/rentals.json`, rental `R-1001`).
 
 The machines have no hour meter to read or photograph; hours come only from
 the machine's software. `hourMeterAtCheckout` is the reading taken from it at
-check-out, and `POST /api/rentals/:id/return` fills `hourMeterAtReturn` from
+check-out (mocked from the serial number when the rental is created), and `POST /api/rentals/:id/return` fills `hourMeterAtReturn` from
 the (mocked) ISO 15143-3 feed. No screen asks the worker for hours.
+
+## Home and New rental
+
+`/` lists the rentals, newest first. Each card shows the machine, customer,
+serial, a status, and the one screen that moves it forward: check-out photos,
+return, finishing the damage check, or the report (plus customer evidence once
+inspected). **New rental** (`/rentals/new`) asks for the machine and the
+customer, never hours, and opens the check-out photos.
 
 ## Capture screens (Daniel)
 
