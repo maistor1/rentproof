@@ -22,7 +22,7 @@ function rental(id: string, checkoutPhotos: Record<string, string>, returnPhotos
     id,
     machine: { id: "M-07", name: "Mini excavator (e2e)", model: "CAT 301.7 CR", serialNumber: "E2E0301707" },
     customer: { name: "Nordbau GmbH", email: "site@nordbau.example" },
-    status: "out",
+    status: id === DONE_RENTAL ? "inspected" : "out",
     checkoutAt: "2026-10-10T08:00:00.000Z",
     returnAt: null,
     hourMeterAtCheckout: 1240.5,

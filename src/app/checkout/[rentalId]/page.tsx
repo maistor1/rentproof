@@ -3,7 +3,7 @@ import { BlockedNotice } from "@/components/capture/BlockedNotice";
 import { getRental } from "@/lib/storage";
 import { CheckoutFlow } from "./CheckoutFlow";
 
-// Reads rentals.json per request, like the home page.
+// Reads the rental files per request, like the home page.
 export const dynamic = "force-dynamic";
 
 // RP-4: capture the six check-out photos. The hour meter is data, shown only.

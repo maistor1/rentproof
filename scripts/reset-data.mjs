@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Clears runtime data so the app starts again from the seeded rental:
+// Clears runtime data so the app starts again from data/rentals.json (empty):
 // data/rentals.local.json, uploaded photos and saved reports.
 import { readdir, rm } from "node:fs/promises";
 import path from "node:path";
@@ -12,4 +12,4 @@ for (const dir of ["photos", "inspections"]) {
     if (name !== ".gitkeep") await rm(path.join(full, name), { recursive: true, force: true });
   }
 }
-console.log("Runtime data cleared. The app is back to data/rentals.json.");
+console.log("Runtime data cleared. The app starts again with no rentals (data/rentals.json).");

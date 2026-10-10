@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { isDamageReport, isPhoto } from "@/lib/client/guards";
 import { runInspection } from "@/lib/client/inspectApi";
 import { uploadPhoto } from "@/lib/client/photosApi";
-import { recordReturn } from "@/lib/client/rentalsApi";
+import { createRental, recordReturn } from "@/lib/client/rentalsApi";
 import { fetchInvoice, reviewFinding } from "@/lib/client/reviewApi";
 import { makeReport, sampleRental } from "@/test/fixtures";
 
@@ -124,5 +124,30 @@ describe("fetchInvoice", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(json(200, { total: "lots" })));
     const r = await fetchInvoice("I-1");
     expect(!r.ok && r.error.kind).toBe("invalid_response");
+  });
+});
+
+describe("createRental", () => {
+  const input = {
+    machine: { name: "Mini excavator", model: "Kubota U27-4", serialNumber: "KBU27-0042" },
+    customer: { name: "Bau AG", email: "yard@bau.example" },
+  };
+
+  it("posts the form as JSON and returns the new rental", async () => {
+    const rental = sampleRental();
+    const fetch = vi.fn().mockResolvedValue(json(201, rental));
+    vi.stubGlobal("fetch", fetch);
+    expect(await createRental(input)).toEqual({ ok: true, value: rental });
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toBe("/api/rentals");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body)).toEqual(input);
+  });
+
+  it("turns a 400 into a friendly message", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(json(400, { error: "customer.email is required" })));
+    const r = await createRental(input);
+    expect(!r.ok && r.error.kind).toBe("bad_request");
+    expect(!r.ok && r.error.message).not.toContain("customer.email");
   });
 });

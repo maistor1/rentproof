@@ -31,8 +31,8 @@ node .claude/skills/rentproof-api-smoke/scripts/smoke.mjs
 node .claude/skills/rentproof-api-smoke/scripts/smoke.mjs --photos test-set/photos --scenario 07
 ```
 
-Other flags: `--base URL`, `--rental ID`, `--keep` (don't restore
-rental data afterwards).
+Other flags: `--base URL`, `--rental ID` (use an existing rental instead of
+creating one), `--keep` (don't restore rental data afterwards).
 
 Default to `--skip-inspect` while working on backend or UI code. Only do full
 runs when the vision call or the report is what you are checking, because each
@@ -40,12 +40,15 @@ one spends API credit.
 
 ## What it checks
 
+0. Without `--rental`: `POST /api/rentals` rejects a body with missing fields
+   (400), then creates a throwaway smoke rental (201) that the rest of the run
+   uses. The app starts with no rentals, so there is no fixed id to rely on.
 1. `GET /api/rentals/:id` returns the rental.
 2. `POST /api/photos` rejects a path-traversal slot with 400.
 3. Six check-out and six return uploads, each phase sent in parallel. Every
    photo comes back resized to at most ~1,500 px on the long edge.
 4. The rental record holds all 12 photo ids afterwards. A failure here usually
-   means parallel writes to `rentals.json` overwrote each other.
+   means parallel writes to `rentals.local.json` overwrote each other.
 5. `GET /api/photos/:id` serves `image/jpeg`.
 6. `POST /api/rentals/:id/return` marks the rental returned and attaches the
    mocked ISO 15143-3 snapshot with the return hours.
@@ -61,8 +64,8 @@ one spends API credit.
 
 Uploads write files to `data/photos/` and reports to `data/inspections/`, and
 rental changes go to `data/rentals.local.json`. All three are gitignored. The
-script backs up the rental file and restores it afterwards, so the rental is
-`out` again for the next run. Photos and reports pile up; clear them with
+script backs up the rental file and restores it afterwards, so the smoke
+rental disappears (or a `--rental` is `out` again) for the next run. Photos and reports pile up; clear them with
 `npm run reset-data`.
 
 ## Reading the result

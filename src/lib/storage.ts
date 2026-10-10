@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { DamageReport, Photo, Rental } from "@/lib/types";
 
@@ -71,6 +71,16 @@ export function updateRental(
   });
 }
 
+// Adds a new rental to the working copy. Throws if the id is taken.
+export function addRental(rental: Rental): Promise<void> {
+  return serialized(async () => {
+    const rentals = await listRentals();
+    if (rentals.some((r) => r.id === rental.id)) throw new Error(`rental ${rental.id} exists`);
+    rentals.push(rental);
+    await writeJson(rentalsFile(), rentals);
+  });
+}
+
 /**
  * @deprecated Use updateRental. saveRental writes back a whole record, so a
  * copy read before a slow step (the vision calls) overwrites anything saved in
@@ -90,6 +100,18 @@ const reportFile = (id: string) => path.join(inspectionDir(), `${id}.json`);
 
 export async function getReport(id: string): Promise<DamageReport | undefined> {
   return isSafeId(id) ? readJson<DamageReport>(reportFile(id)) : undefined;
+}
+
+// Newest report for a rental, or undefined. Reads every report file, which is
+// fine for the handful a demo produces.
+export async function latestReportId(rentalId: string): Promise<string | undefined> {
+  const names = await readdir(inspectionDir()).catch(() => [] as string[]);
+  const reports = await Promise.all(
+    names.filter((n) => n.endsWith(".json")).map((n) => getReport(n.slice(0, -".json".length))),
+  );
+  return reports
+    .filter((r): r is DamageReport => r?.rentalId === rentalId)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0]?.id;
 }
 
 export function saveReport(report: DamageReport): Promise<void> {

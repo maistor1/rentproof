@@ -3,7 +3,8 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach } from "vitest";
 
-const SEED = path.join(process.cwd(), "data", "rentals.json");
+// Tests run against their own seed (R-1001); the app seed starts empty.
+const SEED = path.join(process.cwd(), "src", "test", "seed", "rentals.json");
 
 // Points storage at a fresh copy of the seed data for each test. Returns a
 // getter for the folder so tests can inspect the files.
