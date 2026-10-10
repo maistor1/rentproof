@@ -1,5 +1,5 @@
 import { inspectRental, missingSlots } from "@/lib/inspect";
-import { getRental, saveRental, saveReport } from "@/lib/storage";
+import { getRental, saveReport, updateRental } from "@/lib/storage";
 
 // Six vision calls in parallel can take a while.
 export const maxDuration = 120;
@@ -19,7 +19,10 @@ export async function POST(request: Request) {
 
   const missing = missingSlots(rental);
   if (missing.length > 0) {
-    return Response.json({ error: `missing photos: ${missing.join(", ")}` }, { status: 400 });
+    return Response.json(
+      { error: `missing photos: ${missing.join(", ")}`, missingSlots: missing },
+      { status: 400 },
+    );
   }
 
   let report;
@@ -31,9 +34,12 @@ export async function POST(request: Request) {
   }
 
   await saveReport(report);
-  // A retake means the return screen re-shoots and calls us again.
+  // A retake means the return screen re-shoots and calls us again. Update in
+  // place: `rental` was read before the vision calls and may be stale.
   if (report.retakeSlots.length === 0) {
-    await saveRental({ ...rental, status: "inspected" });
+    await updateRental(rental.id, (r) => {
+      r.status = "inspected";
+    });
   }
 
   return Response.json(report);

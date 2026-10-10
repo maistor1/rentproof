@@ -2,7 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { isDamageReport, isPhoto } from "@/lib/client/guards";
 import { runInspection } from "@/lib/client/inspectApi";
 import { uploadPhoto } from "@/lib/client/photosApi";
-import { makeReport } from "@/test/fixtures";
+import { recordReturn } from "@/lib/client/rentalsApi";
+import { makeReport, sampleRental } from "@/test/fixtures";
 
 const photo = {
   id: "P1",
@@ -67,5 +68,24 @@ describe("runInspection", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(json(400, { error: "missing photos", missingSlots: ["rear", "x"] })));
     const r = await runInspection("R-1001");
     expect(!r.ok && r.error.missingSlots).toEqual(["rear"]);
+  });
+});
+
+describe("recordReturn", () => {
+  it("posts to the rental's return route and returns the rental", async () => {
+    const rental = sampleRental();
+    const fetch = vi.fn().mockResolvedValue(json(200, rental));
+    vi.stubGlobal("fetch", fetch);
+    const r = await recordReturn("R-1001");
+    expect(r).toEqual({ ok: true, value: rental });
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toBe("/api/rentals/R-1001/return");
+    expect(init.method).toBe("POST");
+  });
+
+  it("rejects a reply that isn't a rental", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(json(200, { id: "R-1001" })));
+    const r = await recordReturn("R-1001");
+    expect(!r.ok && r.error.kind).toBe("invalid_response");
   });
 });

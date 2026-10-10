@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import type { Page } from "@playwright/test";
-import { PHOTO_FILE, SLOTS } from "./fixtures";
+import { E2E_RENTALS, PHOTO_FILE, SLOTS } from "./fixtures";
 
 // Network-level mocks only: the app itself has no mock mode.
 
@@ -43,8 +43,13 @@ function report(id: string, rentalId: string, retake: Record<string, string>) {
   };
 }
 
-// Answers each damage check in turn, after a short delay so the wait screen shows.
+// Closes the rental, then answers each damage check in turn, after a short
+// delay so the wait screen shows.
 export async function mockInspect(page: Page, rentalId: string, rounds: Record<string, string>[]): Promise<void> {
+  const rental = E2E_RENTALS.find((r) => r.id === rentalId);
+  await page.route(`**/api/rentals/${rentalId}/return`, (route) =>
+    route.fulfill({ json: { ...rental, status: "returned" } }),
+  );
   let call = 0;
   await page.route("**/api/inspect", async (route) => {
     const retake = rounds[Math.min(call, rounds.length - 1)];

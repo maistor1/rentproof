@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, type Dispatch } from "react";
 import type { FlowAction } from "@/lib/capture/flowTypes";
 import { decideInspectionOutcome } from "@/lib/capture/inspectionOutcome";
 import { runInspection } from "@/lib/client/inspectApi";
+import { recordReturn } from "@/lib/client/rentalsApi";
 
 export const PHOTO_NOT_ON_SERVER = "This photo didn't reach the server. Take it again.";
 
@@ -14,7 +15,7 @@ interface InspectionInput {
   dispatch: Dispatch<FlowAction>;
 }
 
-// Runs the damage check, then either opens the report or sends the worker
+// Closes the rental (telematics hours), runs the damage check, then either opens the report or sends the worker
 // back to the slots the model couldn't read.
 export function useInspection({ rentalId, round, dispatch }: InspectionInput): { run: () => void } {
   const router = useRouter();
@@ -30,6 +31,12 @@ export function useInspection({ rentalId, round, dispatch }: InspectionInput): {
     controller.current = c;
     dispatch({ type: "inspectionStarted", at: Date.now() });
     try {
+      const returned = await recordReturn(rentalId, c.signal);
+      if (c.signal.aborted) return;
+      if (!returned.ok) {
+        dispatch({ type: "inspectionFailed", error: returned.error.message });
+        return;
+      }
       const result = await runInspection(rentalId, c.signal);
       if (c.signal.aborted) return;
       if (!result.ok) {

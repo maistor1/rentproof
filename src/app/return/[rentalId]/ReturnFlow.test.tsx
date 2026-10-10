@@ -24,14 +24,17 @@ vi.mock("@/lib/camera/cameraSupport", async (importOriginal) => ({
 }));
 vi.mock("@/lib/client/photosApi", () => ({ uploadPhoto: vi.fn() }));
 vi.mock("@/lib/client/inspectApi", () => ({ runInspection: vi.fn() }));
+vi.mock("@/lib/client/rentalsApi", () => ({ recordReturn: vi.fn() }));
 
 const { uploadPhoto } = await import("@/lib/client/photosApi");
 const { runInspection } = await import("@/lib/client/inspectApi");
+const { recordReturn } = await import("@/lib/client/rentalsApi");
 const upload = vi.mocked(uploadPhoto);
 const inspect = vi.mocked(runInspection);
 
 const base = makeRental({ photos: { checkout: allPhotos("C"), return: {} } });
 const rental = { ...base, telematics: mockSnapshot(base, 37.5) };
+vi.mocked(recordReturn).mockImplementation(async () => ({ ok: true, value: rental }));
 
 async function shootAll(user: ReturnType<typeof userEvent.setup>, slots: readonly Slot[]) {
   for (const slot of slots) {
