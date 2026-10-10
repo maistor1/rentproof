@@ -55,5 +55,10 @@ next-env.d.ts
 /data/inspections/*
 !/data/inspections/.gitkeep
 /data/rentals.local.json
+/data/*.tmp
+/data/*.smoke-backup
 /test-set/photos/*
 !/test-set/photos/.gitkeep
+
+# session notes
+HANDOFF.md
