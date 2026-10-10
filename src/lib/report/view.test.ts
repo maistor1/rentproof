@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { formatMoney, groupFindings, highlightStyle, ignoredChanges, pendingCount } from "@/lib/report/view";
+import {
+  evidenceItems,
+  findingTitle,
+  formatMoney,
+  groupFindings,
+  highlightStyle,
+  ignoredChanges,
+  notCharged,
+  pendingCount,
+} from "@/lib/report/view";
 import { makeReport, sampleReport } from "@/test/fixtures";
 
 describe("highlightStyle", () => {
@@ -56,5 +65,41 @@ describe("ignoredChanges", () => {
 describe("formatMoney", () => {
   it("formats with the currency symbol", () => {
     expect(formatMoney(995, "EUR")).toBe("€995.00");
+  });
+});
+
+describe("findingTitle", () => {
+  it("reads like a sentence", () => {
+    expect(findingTitle({ ...sampleReport().findings[0], type: "bent_or_broken", severity: "severe" })).toBe(
+      "Bent or broken (severe)",
+    );
+  });
+});
+
+describe("evidenceItems", () => {
+  it("pairs each invoice line with its finding, in invoice order", () => {
+    const report = sampleReport();
+    const lines = ["F-confirmed", "F-auto"].map((findingId) => ({
+      findingId,
+      description: "",
+      priceKey: "scratch/minor" as const,
+      amount: 1,
+      beforePhotoId: "B",
+      afterPhotoId: "A",
+    }));
+    const invoice = { reportId: report.id, rentalId: "R-1001", currency: "EUR", lines, total: 2 };
+    expect(evidenceItems(report, invoice).map((i) => i.finding.id)).toEqual(["F-confirmed", "F-auto"]);
+  });
+});
+
+describe("notCharged", () => {
+  it("lists rejected findings and ignored changes, never hidden ones", () => {
+    const report = sampleReport();
+    report.slots = makeReport().slots;
+    report.slots[0].ignored_changes = ["mud on the blade"];
+    expect(notCharged(report)).toEqual([
+      { slot: "rear", text: "Dent (minor): lower edge of the left door. Staff decided not to charge." },
+      { slot: "front", text: "mud on the blade" },
+    ]);
   });
 });
