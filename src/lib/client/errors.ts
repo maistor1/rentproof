@@ -3,13 +3,14 @@ import type { AppError } from "@/lib/client/result";
 // Messages the worker sees. Server error strings are for developers and stay
 // in the error body; nothing here leaks them to the screen.
 
-export type ApiContext = "photoUpload" | "inspection" | "return" | "review";
+export type ApiContext = "photoUpload" | "inspection" | "return" | "review" | "createRental";
 
 const NOT_IMPLEMENTED: Record<ApiContext, string> = {
   photoUpload: "Photo upload isn't available yet. Your photos stay on this screen, retry when it's ready.",
   inspection: "The damage check isn't available yet.",
   return: "Closing the rental isn't available yet.",
   review: "Reviewing findings isn't available yet.",
+  createRental: "Creating rentals isn't available yet.",
 };
 
 const TIMEOUT: Record<ApiContext, string> = {
@@ -17,6 +18,7 @@ const TIMEOUT: Record<ApiContext, string> = {
   inspection: "The damage check is taking too long. Try again.",
   return: "Closing the rental is taking too long. Try again.",
   review: "Saving the decision is taking too long. Try again.",
+  createRental: "Saving the rental is taking too long. Try again.",
 };
 
 export function friendlyHttpError(context: ApiContext, status: number): AppError {
