@@ -9,6 +9,8 @@ import type { DamageReport, Photo, Rental } from "@/lib/types";
 // is gitignored, so demo runs never dirty the git tree.
 export const dataDir = () => process.env.RENTPROOF_DATA_DIR ?? path.join(process.cwd(), "data");
 export const photoDir = () => path.join(dataDir(), "photos");
+/** @deprecated Use readPhoto(id). Kept so code written against the first scaffold still builds. */
+export const PHOTO_DIR = path.join(process.cwd(), "data", "photos");
 const inspectionDir = () => path.join(dataDir(), "inspections");
 const seedFile = () => path.join(dataDir(), "rentals.json");
 const rentalsFile = () => path.join(dataDir(), "rentals.local.json");
@@ -69,6 +71,11 @@ export function updateRental(
   });
 }
 
+/**
+ * @deprecated Use updateRental. saveRental writes back a whole record, so a
+ * copy read before a slow step (the vision calls) overwrites anything saved in
+ * the meantime, such as the return.
+ */
 export function saveRental(rental: Rental): Promise<void> {
   return serialized(async () => {
     const rentals = await listRentals();

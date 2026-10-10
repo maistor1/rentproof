@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  PHOTO_DIR,
   getPhoto,
   getRental,
   getReport,
@@ -96,5 +97,11 @@ describe("ids", () => {
     expect(await getPhoto("../rentals")).toBeUndefined();
     expect(await readPhoto("../../package")).toBeUndefined();
     expect(await getReport("../rentals")).toBeUndefined();
+  });
+});
+
+describe("compatibility", () => {
+  it("keeps PHOTO_DIR for code written before readPhoto existed", () => {
+    expect(PHOTO_DIR).toBe(path.join(process.cwd(), "data", "photos"));
   });
 });

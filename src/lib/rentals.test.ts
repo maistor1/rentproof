@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEMO_HOURS_USED, recordReturn } from "@/lib/rentals";
-import { getRental } from "@/lib/storage";
+import { getRental, updateRental } from "@/lib/storage";
 import { withTempDataDir } from "@/test/tempData";
 
 withTempDataDir();
@@ -33,6 +33,16 @@ describe("recordReturn", () => {
 
   it.each([-5, "lots"])("rejects hoursUsed %s with 400", async (bad) => {
     await expect(recordReturn("R-1001", bad)).rejects.toMatchObject({ status: 400 });
+  });
+
+  it("still records the hours if the rental was inspected before the return", async () => {
+    await updateRental("R-1001", (r) => {
+      r.status = "inspected";
+    });
+    const r = await recordReturn("R-1001");
+    expect(r.hourMeterAtReturn).toBe(1240.5 + DEMO_HOURS_USED);
+    expect(r.telematics).not.toBeNull();
+    expect(r.status).toBe("inspected");
   });
 
   it("returns 404 for an unknown rental", async () => {

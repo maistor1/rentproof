@@ -112,6 +112,10 @@ the (mocked) ISO 15143-3 feed. No screen asks the worker for hours.
   `readPhoto(rental.photos.checkout[slot])` / `readPhoto(rental.photos.return[slot])`
   for the JPEG buffers, `saveReport(report)`, and `updateRental(id, r => { r.status = "inspected"; })`.
   Use `newId("I")` for the report id.
+- Call `updateRental` after the vision calls instead of `saveRental({ ...rental, ... })`.
+  The rental read before the calls is stale by then, and writing it back would
+  erase a return recorded while the inspection ran. `PHOTO_DIR` and
+  `saveRental` still work but are deprecated.
 
 ## Git
 

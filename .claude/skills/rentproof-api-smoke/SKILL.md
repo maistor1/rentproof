@@ -1,6 +1,6 @@
 ---
 name: rentproof-api-smoke
-description: Run the RentProof end-to-end API smoke test (rental → 12 photo uploads → hour meter → inspect → confirm → invoice) against the local dev server and interpret the results. Use this whenever someone wants to check that the backend or the whole flow works, before merging to main, at the H3 and H6 milestones, after changing an API route, storage, pricing or the vision call, or when a screen shows wrong data and you need to know whether the API or the UI is at fault. Also use it to try a test-set scenario through the real pipeline.
+description: Run the RentProof end-to-end API smoke test (rental → 12 photo uploads → return with telematics hours → inspect → confirm → invoice) against the local dev server and interpret the results. Use this whenever someone wants to check that the backend or the whole flow works, before merging to main, at the H3 and H6 milestones, after changing an API route, storage, pricing or the vision call, or when a screen shows wrong data and you need to know whether the API or the UI is at fault. Also use it to try a test-set scenario through the real pipeline.
 ---
 
 # RentProof API smoke test

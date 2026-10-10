@@ -15,20 +15,22 @@ function hours(value: unknown, field: string): number {
   return value;
 }
 
-// RP-7: closes the rental with the hours from the (mocked) telematics feed.
-// Calling it again returns the rental unchanged, so a double tap is harmless.
+// RP-7: records the return hours from the (mocked) telematics feed. Once the
+// hours are recorded, calling it again changes nothing, so a double tap is
+// harmless. Status moves out -> returned only; a rental already marked
+// inspected keeps that status but still gets its hours.
 export async function recordReturn(
   rentalId: string,
   hoursUsed: unknown = DEMO_HOURS_USED,
 ): Promise<Rental> {
   const used = hours(hoursUsed, "hoursUsed");
   const rental = await updateRental(rentalId, (r) => {
-    if (r.status !== "out") return;
+    if (r.hourMeterAtReturn !== null) return;
     const snapshot = mockSnapshot(r, used);
     r.telematics = snapshot;
     r.hourMeterAtReturn = snapshot.CumulativeOperatingHours.Hour;
     r.returnAt = snapshot.CumulativeOperatingHours.datetime;
-    r.status = "returned";
+    if (r.status === "out") r.status = "returned";
   });
   if (!rental) throw new HttpError(404, "rental not found");
   return rental;
