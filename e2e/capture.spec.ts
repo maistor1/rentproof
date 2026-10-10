@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { CHECKOUT_RENTAL, PHOTO_FILE, RETURN_RENTAL } from "./fixtures";
-import { mockInspect, mockPhotoFiles, mockPhotoUpload } from "./mockApi";
+import { mockInspect, mockPhotoFiles, mockPhotoUpload, mockReview } from "./mockApi";
 
 const TITLES = ["Front", "Rear", "Left side", "Right side", "Operator cab", "Attachment"];
 
@@ -51,6 +51,16 @@ test("return: live ghost camera, retake loop, then the report", async ({ page })
 
   await page.getByRole("button", { name: "Run damage check again" }).click();
   await expect(page).toHaveURL(/\/report\/RPT-E2E-2$/);
+
+  // RP-12: decide the uncertain finding, the total follows.
+  await mockReview(page);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Damage report");
+  await expect(page.getByText("dirt on the left track")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Review 1 finding first" })).toBeDisabled();
+  await page.getByRole("button", { name: "Confirm damage" }).click();
+  await expect(page.getByText("Confirmed, charged")).toBeVisible();
+  await expect(page.getByTestId("invoice-total")).toHaveText("€45.00");
+  await expect(page.getByRole("link", { name: "Open customer evidence" })).toBeVisible();
 });
 
 test("return is blocked until check-out photos exist", async ({ page }) => {
