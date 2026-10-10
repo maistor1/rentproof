@@ -3,6 +3,7 @@ import { isDamageReport, isPhoto } from "@/lib/client/guards";
 import { runInspection } from "@/lib/client/inspectApi";
 import { uploadPhoto } from "@/lib/client/photosApi";
 import { recordReturn } from "@/lib/client/rentalsApi";
+import { fetchInvoice, reviewFinding } from "@/lib/client/reviewApi";
 import { makeReport, sampleRental } from "@/test/fixtures";
 
 const photo = {
@@ -86,6 +87,42 @@ describe("recordReturn", () => {
   it("rejects a reply that isn't a rental", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(json(200, { id: "R-1001" })));
     const r = await recordReturn("R-1001");
+    expect(!r.ok && r.error.kind).toBe("invalid_response");
+  });
+});
+
+describe("reviewFinding", () => {
+  it("patches the finding and returns the updated report", async () => {
+    const report = makeReport({ id: "I-1" });
+    const fetch = vi.fn().mockResolvedValue(json(200, report));
+    vi.stubGlobal("fetch", fetch);
+    const r = await reviewFinding("I-1", "F-2", "confirmed");
+    expect(r).toEqual({ ok: true, value: report });
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toBe("/api/inspect/I-1/findings/F-2");
+    expect(init.method).toBe("PATCH");
+    expect(JSON.parse(init.body)).toEqual({ status: "confirmed" });
+  });
+
+  it("gives a friendly message when the server refuses", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(json(409, { error: "only needs_review findings" })));
+    const r = await reviewFinding("I-1", "F-2", "rejected");
+    expect(!r.ok && r.error.message).toMatch(/try again/i);
+  });
+});
+
+describe("fetchInvoice", () => {
+  it("gets the invoice for a report", async () => {
+    const invoice = { reportId: "I-1", rentalId: "R-1001", currency: "EUR", lines: [], total: 0 };
+    const fetch = vi.fn().mockResolvedValue(json(200, invoice));
+    vi.stubGlobal("fetch", fetch);
+    expect(await fetchInvoice("I-1")).toEqual({ ok: true, value: invoice });
+    expect(fetch.mock.calls[0][0]).toBe("/api/invoice/I-1");
+  });
+
+  it("rejects a reply that isn't an invoice", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(json(200, { total: "lots" })));
+    const r = await fetchInvoice("I-1");
     expect(!r.ok && r.error.kind).toBe("invalid_response");
   });
 });
