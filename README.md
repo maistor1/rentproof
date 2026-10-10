@@ -16,6 +16,21 @@ npm run dev                  # http://localhost:3000
 Never commit `.env.local`. Photos and reports are written to `data/` and are
 gitignored.
 
+## Deploy (Render)
+
+The client demo runs on Render's free plan from `render.yaml`. To set it up, sign
+in to render.com with GitHub, choose New > Blueprint, pick this repo on `main`,
+and fill in `ANTHROPIC_API_KEY`, `DEMO_PASSWORD` and, if your key needs it,
+`ANTHROPIC_WORKSPACE_ID`. With `DEMO_PASSWORD` set, the browser asks for a
+password before anything loads (any user name works). Auto-deploy is off: press
+Manual Deploy in the dashboard after merging to `main`.
+
+The free plan has no persistent disk. Rentals, photos and reports are lost when
+the service redeploys, restarts or sleeps, and it sleeps after 15 minutes without
+traffic. Waking it takes about a minute, so open the URL shortly before a meeting
+and run check-out, return and report in one sitting. Give clients the printed
+PDF of the evidence page, not a link to it.
+
 ## Team
 
 | Name | GitHub | Area |

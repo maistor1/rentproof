@@ -1,0 +1,20 @@
+# Render Blueprint for the client demo deploy. See README "Deploy (Render)".
+services:
+  - type: web
+    name: rentproof
+    runtime: node
+    plan: free
+    # Tailwind and TypeScript are devDependencies but the build needs them.
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    # Every deploy wipes the demo data, so deploy from the dashboard on purpose.
+    autoDeploy: false
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_WORKSPACE_ID
+        sync: false
+      - key: DEMO_PASSWORD
+        sync: false
