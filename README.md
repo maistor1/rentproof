@@ -99,6 +99,40 @@ the machine's software. `hourMeterAtCheckout` is the reading taken from it at
 check-out, and `POST /api/rentals/:id/return` fills `hourMeterAtReturn` from
 the (mocked) ISO 15143-3 feed. No screen asks the worker for hours.
 
+## Capture screens (Daniel)
+
+`/checkout/:id` (RP-4) and `/return/:id` (RP-9) share one flow: intro, six
+slots, end screen. Return adds the live angle guide and the damage check.
+
+- The hour meter is data (see Data above). The screens only show it.
+- They call `POST /api/photos` (one upload at a time, downscaled to 2,000 px
+  in the browser) and `POST /api/inspect`. Nothing is mocked in the app: while a
+  route answers 501 the screen keeps the photos and says so.
+- The photo URL lives only in `src/lib/photoUrl.ts`. Uploads are always
+  re-encoded to JPEG in the browser, so HEIC never reaches the 415.
+- `/api/inspect` with `retakeSlots` sends the worker back to those slots, then
+  re-runs. With none, the screen opens `/report/:reportId`.
+
+Attention rules (shared with the report pages, tokens in `globals.css`):
+
+- One primary action per screen, `bg-action` yellow, 56 px, bottom of the screen.
+- Yellow = do this next, green = done, red = retake. Text uses the `*-ink`
+  tokens for 7:1 contrast. Three text sizes: `text-task`, `text-body`, `text-meta`.
+- Progress (machine map + six segments) is always visible while capturing.
+- Motion only on state changes, 150–250 ms; reduced-motion users get 1 ms.
+
+Testing on a phone: the live camera needs HTTPS. Run `npm run dev:https`, set
+`DEV_ORIGINS=<laptop LAN IP>` so the dev server accepts the phone, and accept the
+certificate warning. Without HTTPS the return screen falls back to the reference
+photo plus the phone's camera app.
+
+```bash
+npm test               # unit + component tests (Vitest)
+npm run test:coverage  # 80% threshold on the capture code
+npm run test:e2e       # Playwright, phone viewport, fake camera; mocks photos + inspect
+npm run typecheck
+```
+
 ## Notes for the AI owner
 
 - Model: `claude-sonnet-5-5` (see `src/lib/ai/vision.ts`).
