@@ -13,6 +13,14 @@
 # testing
 /coverage
 
+/test-results/
+/playwright-report/
+/blob-report/
+/e2e/.data/
+
+# next dev --experimental-https
+/certificates/
+
 # next.js
 /.next/
 /out/

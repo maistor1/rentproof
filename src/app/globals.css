@@ -12,6 +12,83 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/*
+ * Attention system (capture screens, shared with the report pages).
+ * Colour means something or it isn't used:
+ *   action  = the one thing to do next (only the primary button and the current slot)
+ *   done    = captured / confirmed
+ *   problem = retake or error
+ * done/problem are for fills, borders and icons. Text uses the *-ink tokens,
+ * which keep >= 7:1 contrast on white for sunlight readability.
+ */
+@theme {
+  --color-action: #facc15;
+  --color-action-ink: #000000;
+  --color-done: #16a34a;
+  --color-done-ink: #14532d;
+  --color-problem: #dc2626;
+  --color-problem-ink: #991b1b;
+
+  /* Three sizes only: the current task, body, meta. */
+  --text-task: 2rem;
+  --text-task--line-height: 2.375rem;
+  --text-task--font-weight: 600;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5rem;
+  --text-meta: 0.8125rem;
+  --text-meta--line-height: 1.125rem;
+
+  /* Motion happens on state changes only, one thing at a time. */
+  --animate-slot-pulse: slot-pulse 600ms ease-in-out 2;
+  --animate-thumb-in: thumb-in 200ms cubic-bezier(0.2, 0, 0, 1) both;
+  --animate-flash-problem: flash-problem 250ms ease-out 1;
+  --animate-fade-in: fade-in 150ms ease-out both;
+  /* Status indicators: always paired with a text label. */
+  --animate-shimmer: shimmer 1.2s linear infinite;
+  --animate-scan: scan 1.6s ease-in-out infinite;
+
+  @keyframes slot-pulse {
+    50% {
+      opacity: 0.45;
+    }
+  }
+  @keyframes thumb-in {
+    from {
+      opacity: 0;
+      transform: scale(0.6) translateY(-8px);
+    }
+  }
+  @keyframes flash-problem {
+    from {
+      box-shadow: 0 0 0 6px var(--color-problem);
+    }
+    to {
+      box-shadow: 0 0 0 6px transparent;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: -200% 0;
+    }
+    to {
+      background-position: 200% 0;
+    }
+  }
+  @keyframes scan {
+    from {
+      transform: translateY(-100%);
+    }
+    to {
+      transform: translateY(100%);
+    }
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -22,5 +99,27 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Capture screens are used outdoors: always light, always high contrast. */
+.capture-surface {
+  color-scheme: light;
+  background-color: #ffffff;
+  color: #09090b;
+}
+
+.shimmer-overlay {
+  background-image: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.55), transparent);
+  background-size: 200% 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
 }
