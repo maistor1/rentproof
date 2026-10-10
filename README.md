@@ -120,6 +120,9 @@ slots, end screen. Return adds the live angle guide and the damage check.
 - They call `POST /api/photos` (one upload at a time, downscaled to 2,000 px
   in the browser) and `POST /api/inspect`. Nothing is mocked in the app: while a
   route answers 501 the screen keeps the photos and says so.
+- Every slot also has **Choose from files**: an input without `capture`, so the
+  phone offers the photo library, Files and Downloads (iOS hides them when
+  `capture` is set). The picked image goes through the same review and upload.
 - The photo URL lives only in `src/lib/photoUrl.ts`. Uploads are always
   re-encoded to JPEG in the browser, so HEIC never reaches the 415.
 - `/api/inspect` with `retakeSlots` sends the worker back to those slots, then

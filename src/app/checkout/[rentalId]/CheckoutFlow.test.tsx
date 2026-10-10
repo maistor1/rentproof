@@ -106,6 +106,22 @@ describe("CheckoutFlow", () => {
     expect(upload).not.toHaveBeenCalled();
   });
 
+  it("takes a photo from the device's files as well as the camera", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<CheckoutFlow rental={makeRental()} />);
+    await user.click(screen.getByRole("button", { name: "Start check-out" }));
+    expect(screen.getByRole("button", { name: "Choose from files" })).toBeInTheDocument();
+    const files = screen.getByLabelText("Photo from files");
+    // No capture attribute, so phones offer the library, Files and Downloads.
+    expect(files).not.toHaveAttribute("capture");
+    await user.upload(files, jpeg());
+    expect(screen.getByAltText("Front photo to review")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Use photo" }));
+    await act(async () => vi.advanceTimersByTime(600));
+    expect(upload.mock.calls.map(([i]) => i.slot)).toEqual(["front"]);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Rear");
+  });
+
   it("warns about files that aren't photos", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime, applyAccept: false });
     render(<CheckoutFlow rental={makeRental()} />);

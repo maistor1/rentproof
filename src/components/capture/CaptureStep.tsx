@@ -19,6 +19,7 @@ interface CaptureStepProps {
   onAccept: () => void;
   onRetake: () => void;
   onSelectSlot: (slot: Slot) => void;
+  onChooseFile?: () => void; // pick an existing photo instead of the camera
 }
 
 function Review({ previewUrl, label }: { previewUrl: string; label: string }) {
@@ -30,7 +31,16 @@ function Review({ previewUrl, label }: { previewUrl: string; label: string }) {
   );
 }
 
-export function CaptureStep({ state, camera, viewfinder, notice, onAccept, onRetake, onSelectSlot }: CaptureStepProps) {
+export function CaptureStep({
+  state,
+  camera,
+  viewfinder,
+  notice,
+  onAccept,
+  onRetake,
+  onSelectSlot,
+  onChooseFile,
+}: CaptureStepProps) {
   const { current, draft } = state;
   const copy = SLOT_COPY[current];
   const retakeReason = state.slots[current].retakeReason;
@@ -59,7 +69,13 @@ export function CaptureStep({ state, camera, viewfinder, notice, onAccept, onRet
       primary={
         draft ? { label: "Use photo", onClick: onAccept } : { label: camera.label, onClick: camera.trigger, disabled: camera.disabled }
       }
-      secondary={draft ? { label: "Retake", onClick: onRetake } : undefined}
+      secondary={
+        draft
+          ? { label: "Retake", onClick: onRetake }
+          : onChooseFile
+            ? { label: "Choose from files", onClick: onChooseFile }
+            : undefined
+      }
     >
       {/* Never keyed: remounting would restart the live camera on every slot. */}
       <div className={`relative rounded-xl ${draft ? "hidden" : ""}`}>

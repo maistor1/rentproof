@@ -7,19 +7,22 @@ interface NativeCaptureProps {
   inputRef: Ref<HTMLInputElement>;
   onCaptured: (file: File) => void;
   onInvalid: (message: string) => void;
+  source?: "camera" | "files";
 }
 
-// Opens the phone's camera app. sr-only rather than hidden so iOS still
-// honours input.click() and tests can reach it.
-export function NativeCapture({ inputRef, onCaptured, onInvalid }: NativeCaptureProps) {
+// "camera" opens the phone's camera app. "files" leaves out `capture`, so the
+// phone offers the photo library, Files and Downloads instead (iOS skips them
+// when `capture` is set). sr-only rather than hidden so iOS still honours
+// input.click() and tests can reach it.
+export function NativeCapture({ inputRef, onCaptured, onInvalid, source = "camera" }: NativeCaptureProps) {
   return (
     <input
       ref={inputRef}
       type="file"
       accept="image/*"
-      capture="environment"
+      capture={source === "camera" ? "environment" : undefined}
       tabIndex={-1}
-      aria-label="Camera"
+      aria-label={source === "camera" ? "Camera" : "Photo from files"}
       className="sr-only"
       onChange={(event) => {
         const input = event.currentTarget;

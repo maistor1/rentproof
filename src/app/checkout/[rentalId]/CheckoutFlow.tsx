@@ -30,9 +30,15 @@ function Viewfinder({ hint, onOpen }: { hint: string; onOpen: () => void }) {
 // Check-out uses the phone's own camera app: no reference to line up with yet.
 function CheckoutCapture({ flow }: { flow: CaptureFlowApi }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const filesRef = useRef<HTMLInputElement>(null);
   const [notice, setNotice] = useState<SlotNotice | null>(null);
   const { state } = flow;
   const open = () => inputRef.current?.click();
+  const onCaptured = (file: File) => {
+    setNotice(null);
+    flow.capture(file);
+  };
+  const onInvalid = (message: string) => setNotice({ slot: state.current, message });
   return (
     <CaptureStep
       state={state}
@@ -41,19 +47,14 @@ function CheckoutCapture({ flow }: { flow: CaptureFlowApi }) {
       viewfinder={
         <>
           <Viewfinder hint={SLOT_COPY[state.current].hint} onOpen={open} />
-          <NativeCapture
-            inputRef={inputRef}
-            onCaptured={(file) => {
-              setNotice(null);
-              flow.capture(file);
-            }}
-            onInvalid={(message) => setNotice({ slot: state.current, message })}
-          />
+          <NativeCapture inputRef={inputRef} onCaptured={onCaptured} onInvalid={onInvalid} />
+          <NativeCapture source="files" inputRef={filesRef} onCaptured={onCaptured} onInvalid={onInvalid} />
         </>
       }
       onAccept={flow.accept}
       onRetake={flow.discardDraft}
       onSelectSlot={flow.goToSlot}
+      onChooseFile={() => filesRef.current?.click()}
     />
   );
 }

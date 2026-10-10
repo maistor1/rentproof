@@ -85,6 +85,33 @@ describe("ReturnFlow", () => {
     expect(inspect).toHaveBeenCalledTimes(2);
   });
 
+  it("takes a return photo from the device's files instead of the live camera", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<ReturnFlow rental={rental} />);
+    await user.click(screen.getByRole("button", { name: "Start return check" }));
+    await screen.findByRole("button", { name: "Take photo" });
+    await user.click(screen.getByRole("button", { name: "Choose from files" }));
+    const files = screen.getByLabelText("Photo from files");
+    expect(files).not.toHaveAttribute("capture");
+    await user.upload(files, new File(["jpeg"], "front.jpg", { type: "image/jpeg" }));
+    expect(screen.getByAltText("Front photo to review")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Use photo" }));
+    await act(async () => vi.advanceTimersByTime(600));
+    expect(upload.mock.calls.map(([i]) => [i.slot, i.phase])).toEqual([["front", "return"]]);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Rear");
+    // The live camera is still there for the next slot.
+    expect(screen.getByTestId("live-camera")).toBeInTheDocument();
+  });
+
+  it("warns about a picked file that isn't a photo", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime, applyAccept: false });
+    render(<ReturnFlow rental={rental} />);
+    await user.click(screen.getByRole("button", { name: "Start return check" }));
+    await screen.findByRole("button", { name: "Take photo" });
+    await user.upload(screen.getByLabelText("Photo from files"), new File(["%PDF"], "a.pdf", { type: "application/pdf" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("isn't a photo");
+  });
+
   it("shows the wait screen, then a friendly error with a retry", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<ReturnFlow rental={{ ...rental, photos: { checkout: allPhotos("C"), return: allPhotos("R") } }} />);
