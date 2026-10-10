@@ -1,4 +1,4 @@
-import type { Box, DamageReport, ReviewedFinding, Slot } from "@/lib/types";
+import type { Box, DamageReport, Invoice, InvoiceLine, ReviewedFinding, Slot } from "@/lib/types";
 
 // Pure helpers for the damage report screen (RP-12).
 
@@ -37,4 +37,30 @@ export function ignoredChanges(report: DamageReport): { slot: Slot; text: string
 // Fixed locale so server and client render the same.
 export function formatMoney(amount: number, currency: string): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
+}
+
+const sentence = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).replaceAll("_", " ");
+
+export function findingTitle(f: Pick<ReviewedFinding, "type" | "severity">): string {
+  return `${sentence(f.type)} (${f.severity})`;
+}
+
+// The customer sees exactly what is billed: one item per invoice line.
+export function evidenceItems(
+  report: DamageReport,
+  invoice: Invoice,
+): { line: InvoiceLine; finding: ReviewedFinding }[] {
+  return invoice.lines.flatMap((line) => {
+    const finding = report.findings.find((f) => f.id === line.findingId);
+    return finding ? [{ line, finding }] : [];
+  });
+}
+
+// What we looked at and let go: staff rejections and the model's ignored
+// changes. Hidden (< 0.50) findings stay in the log only.
+export function notCharged(report: DamageReport): { slot: Slot; text: string }[] {
+  const rejected = report.findings
+    .filter((f) => f.status === "rejected")
+    .map((f) => ({ slot: f.slot, text: `${findingTitle(f)}: ${f.location}. Staff decided not to charge.` }));
+  return [...rejected, ...ignoredChanges(report)];
 }

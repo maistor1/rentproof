@@ -32,7 +32,7 @@ function Photo({ id, alt, children }: { id: string | undefined; alt: string; chi
 export function PhotoCompare({ beforeId, afterId, label, box }: PhotoCompareProps) {
   const highlight = highlightStyle(box);
   return (
-    <div className="grid gap-2 sm:grid-cols-2">
+    <div className="grid gap-2 sm:grid-cols-2 print:grid-cols-2">
       <Photo id={beforeId} alt={`Before: ${label}`} />
       <Photo id={afterId} alt={`After: ${label}`}>
         {highlight && (

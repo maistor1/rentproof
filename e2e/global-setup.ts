@@ -2,6 +2,8 @@ import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import sharp from "sharp";
 import {
   BACKUP_FILE,
+  DONE_REPORT,
+  DONE_REPORT_FILE,
   E2E_DIR,
   E2E_RENTALS,
   E2E_REPORT,
@@ -39,4 +41,5 @@ export default async function globalSetup(): Promise<void> {
     .toBuffer();
   await writeFile(PHOTO_FILE, jpeg);
   await writeFile(REPORT_FILE, JSON.stringify(E2E_REPORT, null, 2) + "\n");
+  await writeFile(DONE_REPORT_FILE, JSON.stringify(DONE_REPORT, null, 2) + "\n");
 }

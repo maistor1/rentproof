@@ -2,6 +2,7 @@ import { PhotoCompare } from "@/components/report/PhotoCompare";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { TextButton } from "@/components/ui/TextButton";
 import type { ReviewDecision } from "@/lib/client/reviewApi";
+import { findingTitle } from "@/lib/report/view";
 import { slotLabel } from "@/lib/slots";
 import type { ReviewedFinding } from "@/lib/types";
 
@@ -13,8 +14,6 @@ interface FindingCardProps {
   error?: string | null;
   onDecide?: (status: ReviewDecision) => void; // review band only
 }
-
-const sentence = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).replaceAll("_", " ");
 
 const DECIDE =
   "flex h-12 flex-1 items-center justify-center rounded-xl border-2 px-3 text-body font-semibold select-none " +
@@ -44,9 +43,7 @@ export function FindingCard({ finding, beforeId, afterId, busy = false, error = 
     >
       <header className="flex items-start justify-between gap-2">
         <div>
-          <h3 className="text-body font-semibold">
-            {sentence(finding.type)} ({finding.severity})
-          </h3>
+          <h3 className="text-body font-semibold">{findingTitle(finding)}</h3>
           <p className="text-meta text-zinc-700">
             {slotLabel(finding.slot)}: {finding.location}
           </p>

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { CHECKOUT_RENTAL, PHOTO_FILE, RETURN_RENTAL } from "./fixtures";
+import { CHECKOUT_RENTAL, DONE_REPORT_ID, PHOTO_FILE, RETURN_RENTAL } from "./fixtures";
 import { mockInspect, mockPhotoFiles, mockPhotoUpload, mockReview } from "./mockApi";
 
 const TITLES = ["Front", "Rear", "Left side", "Right side", "Operator cab", "Attachment"];
@@ -68,4 +68,17 @@ test("return is blocked until check-out photos exist", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Check-out photos missing" })).toBeVisible();
   await page.getByRole("link", { name: "Go to check-out" }).click();
   await expect(page).toHaveURL(`/checkout/${CHECKOUT_RENTAL}`);
+});
+
+test("report to customer evidence, ready to print", async ({ page }) => {
+  await mockPhotoFiles(page);
+  await page.goto(`/report/${DONE_REPORT_ID}`);
+  await page.getByRole("link", { name: "Open customer evidence" }).click();
+  await expect(page).toHaveURL(`/evidence/${DONE_REPORT_ID}`);
+
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Damage evidence");
+  await expect(page.getByTestId("evidence-F-E2E-A")).toBeVisible();
+  await expect(page.getByTestId("evidence-total")).toHaveText("€45.00");
+  await expect(page.getByText(/Staff decided not to charge/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Download PDF" })).toBeVisible();
 });

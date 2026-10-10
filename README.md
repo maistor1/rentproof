@@ -36,8 +36,8 @@ src/
     page.tsx                         rental list (home)
     checkout/[rentalId]/page.tsx     RP-4  Daniel
     return/[rentalId]/page.tsx       RP-9  Daniel
-    report/[inspectionId]/page.tsx   RP-12 Martin
-    evidence/[inspectionId]/page.tsx RP-13 Martin
+    report/[inspectionId]/page.tsx   RP-12 Boris
+    evidence/[inspectionId]/page.tsx RP-13 Boris
     api/
       rentals/                       GET list, GET by id
       rentals/[rentalId]/return/     RP-7  Boris  POST record return (mocked telematics)
@@ -129,9 +129,25 @@ photo plus the phone's camera app.
 ```bash
 npm test               # unit + component tests (Vitest)
 npm run test:coverage  # 80% threshold on the capture code
-npm run test:e2e       # Playwright, phone viewport, fake camera; mocks photos + inspect
+npm run test:e2e       # Playwright, phone viewport, fake camera; mocks the write routes
 npm run typecheck
 ```
+
+## Report screens
+
+`/report/:inspectionId` (RP-12) is the staff screen the return flow opens.
+Review-band findings (0.50–0.79) come first, each with Confirm damage / Reject
+and an undo. After each decision the screen re-fetches the invoice, since the
+server prices it. "Open customer evidence" stays disabled until nothing is
+left in `needs_review`.
+
+`/evidence/:inspectionId` (RP-13) is the read-only customer page: one block per
+invoice line with the before/after pair, the total, and what was checked and
+not charged. "Download PDF" opens the browser's print dialog; print CSS lays
+the page out as A4. It shows "Not ready yet" while findings await review.
+
+Both pages show the rental's latest photos, not a copy taken at inspection
+time, and treat boxes as approximate (soft highlight).
 
 ## Notes for the AI owner
 
