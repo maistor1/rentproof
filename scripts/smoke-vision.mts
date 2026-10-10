@@ -1,6 +1,6 @@
 // Smoke test for compareSlot (RP-6). Calls the real API, costs a few cents.
 //
-//   npx tsx --conditions=react-server scripts/smoke-vision.mts [before.jpg after.jpg [slot]]
+//   npx tsx --env-file=.env.local --conditions=react-server scripts/smoke-vision.mts [before.jpg after.jpg [slot]]
 //
 // With no photos it generates synthetic pairs: no change, dirt only, and a
 // scratch plus a dent. Reads ANTHROPIC_API_KEY from .env.local.
@@ -9,8 +9,6 @@ import sharp from "sharp";
 import { compareSlot } from "@/lib/ai/vision";
 import { applyRules } from "@/lib/rules";
 import type { Slot } from "@/lib/types";
-
-process.loadEnvFile(".env.local");
 
 // A yellow machine body with a cab, on a grey floor.
 const BASE = `
