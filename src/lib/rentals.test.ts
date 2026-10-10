@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { DEMO_HOURS_USED, recordReturn } from "@/lib/rentals";
+import { DEMO_HOURS_USED, createRental, recordReturn } from "@/lib/rentals";
 import { getRental, updateRental } from "@/lib/storage";
+import { mockCheckoutHours } from "@/lib/telematics";
 import { withTempDataDir } from "@/test/tempData";
 
 withTempDataDir();
@@ -47,5 +48,47 @@ describe("recordReturn", () => {
 
   it("returns 404 for an unknown rental", async () => {
     await expect(recordReturn("R-nope")).rejects.toMatchObject({ status: 404 });
+  });
+});
+
+const input = () => ({
+  machine: { name: " Mini excavator ", model: "Kubota U27-4", serialNumber: "KBU27-0042" },
+  customer: { name: "Bau AG", email: "yard@bau.example" },
+});
+
+describe("createRental", () => {
+  it("creates an out rental with check-out hours from telematics", async () => {
+    const r = await createRental(input());
+    expect(r.id).toMatch(/^R-[a-z0-9]{8}$/);
+    expect(r.machine).toEqual({
+      id: expect.stringMatching(/^M-/),
+      name: "Mini excavator",
+      model: "Kubota U27-4",
+      serialNumber: "KBU27-0042",
+    });
+    expect(r.customer).toEqual({ name: "Bau AG", email: "yard@bau.example" });
+    expect(r.status).toBe("out");
+    expect(r.hourMeterAtCheckout).toBe(mockCheckoutHours("KBU27-0042"));
+    expect(r.hourMeterAtReturn).toBeNull();
+    expect(r.photos).toEqual({ checkout: {}, return: {} });
+    expect(await getRental(r.id)).toEqual(r);
+  });
+
+  it.each([
+    ["machine.name", { machine: { ...input().machine, name: "  " } }],
+    ["machine.model", { machine: { ...input().machine, model: undefined } }],
+    ["machine.serialNumber", { machine: { ...input().machine, serialNumber: 7 } }],
+    ["customer.name", { customer: { ...input().customer, name: "" } }],
+    ["customer.email", { customer: { ...input().customer, email: "not-an-email" } }],
+    ["machine.name", { machine: { ...input().machine, name: "x".repeat(121) } }],
+  ])("rejects a bad %s with 400", async (field, over) => {
+    await expect(createRental({ ...input(), ...over })).rejects.toMatchObject({
+      status: 400,
+      message: expect.stringContaining(field),
+    });
+  });
+
+  it.each([null, "text", { machine: null }])("rejects body %j with 400", async (bad) => {
+    await expect(createRental(bad)).rejects.toMatchObject({ status: 400 });
   });
 });

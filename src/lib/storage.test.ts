@@ -4,9 +4,11 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   PHOTO_DIR,
+  addRental,
   getPhoto,
   getRental,
   getReport,
+  latestReportId,
   listRentals,
   readPhoto,
   saveReport,
@@ -14,7 +16,7 @@ import {
   updateReport,
 } from "@/lib/storage";
 import { SLOTS } from "@/lib/types";
-import { sampleReport } from "@/test/fixtures";
+import { sampleRental, sampleReport } from "@/test/fixtures";
 import { withTempDataDir } from "@/test/tempData";
 
 const dir = withTempDataDir();
@@ -103,5 +105,37 @@ describe("ids", () => {
 describe("compatibility", () => {
   it("keeps PHOTO_DIR for code written before readPhoto existed", () => {
     expect(PHOTO_DIR).toBe(path.join(process.cwd(), "data", "photos"));
+  });
+});
+
+describe("addRental", () => {
+  it("appends a new rental to the working copy", async () => {
+    await addRental({ ...sampleRental(), id: "R-new" });
+    expect((await listRentals()).map((r) => r.id)).toEqual(["R-1001", "R-new"]);
+    expect(existsSync(localFile())).toBe(true);
+  });
+
+  it("refuses a duplicate id and writes nothing", async () => {
+    await expect(addRental(sampleRental())).rejects.toThrow(/exists/);
+    expect(existsSync(localFile())).toBe(false);
+  });
+
+  it("keeps both rentals when two are added at once", async () => {
+    await Promise.all(["R-a", "R-b"].map((id) => addRental({ ...sampleRental(), id })));
+    expect((await listRentals()).map((r) => r.id).sort()).toEqual(["R-1001", "R-a", "R-b"]);
+  });
+});
+
+describe("latestReportId", () => {
+  it("is undefined when the rental has no report", async () => {
+    expect(await latestReportId("R-1001")).toBeUndefined();
+  });
+
+  it("returns the newest report for the rental", async () => {
+    const base = sampleReport();
+    await saveReport({ ...base, id: "RPT-old", createdAt: "2026-10-10T10:00:00.000Z" });
+    await saveReport({ ...base, id: "RPT-new", createdAt: "2026-10-10T12:00:00.000Z" });
+    await saveReport({ ...base, id: "RPT-other", rentalId: "R-other", createdAt: "2026-10-10T13:00:00.000Z" });
+    expect(await latestReportId(base.rentalId)).toBe("RPT-new");
   });
 });

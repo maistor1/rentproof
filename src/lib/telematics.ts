@@ -18,3 +18,12 @@ export function mockSnapshot(rental: Rental, hoursUsed: number): TelematicsSnaps
     Location: { datetime: now, Latitude: 52.52, Longitude: 13.405 },
   };
 }
+
+// Stand-in for the fleet's hour meter reading when a rental starts. Derived
+// from the serial number so the same machine always reads the same, and lands
+// in a plausible range for a used rental machine (200-3000 h).
+export function mockCheckoutHours(serialNumber: string): number {
+  let hash = 0;
+  for (const ch of serialNumber) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+  return 200 + (hash % 28000) / 10;
+}
