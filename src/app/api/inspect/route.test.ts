@@ -32,7 +32,11 @@ async function givePhotos(rentalId: string) {
 }
 
 describe("POST /api/inspect", () => {
-  beforeEach(() => vi.mocked(inspectRental).mockReset());
+  // Braces matter: a function returned from beforeEach runs as cleanup, and
+  // mockReset() returns the mock, which then ran once more without a temp dir.
+  beforeEach(() => {
+    vi.mocked(inspectRental).mockReset();
+  });
 
   it("lists the missing slots in the 400 reply", async () => {
     await updateRental("R-1001", (r) => {
