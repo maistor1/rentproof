@@ -40,8 +40,11 @@ src/
     evidence/[inspectionId]/page.tsx RP-13 Martin
     api/
       rentals/                       GET list, GET by id
+      rentals/[rentalId]/return/     RP-7  Boris  POST record return (mocked telematics)
       photos/route.ts                RP-5  Boris  POST upload + resize
+      photos/[photoId]/              RP-5  Boris  GET the JPEG
       inspect/route.ts               RP-6  Konstantin  POST run the 6 vision calls
+      inspect/[inspectionId]/findings/[findingId]/  Boris  PATCH confirm/reject
       invoice/[inspectionId]/        RP-11 Boris
   lib/
     types.ts                         shared JSON contracts (RP-2)
@@ -51,6 +54,7 @@ src/
     rules.ts                         confidence rules       Konstantin
     pricing.ts                       invoice calculator     Boris
     storage.ts                       JSON file storage      Boris
+    photos.ts, rentals.ts, review.ts photo, return, review logic  Boris
     telematics.ts                    mocked ISO 15143-3     Boris
   components/                        shared UI
 data/
@@ -72,11 +76,28 @@ API surface everyone can rely on:
 | --- | --- | --- | --- |
 | `/api/rentals` | GET | | `Rental[]` |
 | `/api/rentals/:id` | GET | | `Rental` |
+| `/api/rentals/:id/return` | POST | optional `{ hoursUsed }` | `Rental` (status `returned`, telematics attached; safe to repeat) |
 | `/api/photos` | POST | form: `rentalId`, `slot`, `phase`, `file` | `Photo` |
+| `/api/photos/:photoId` | GET | | JPEG |
 | `/api/inspect` | POST | `{ rentalId }` | `DamageReport` |
+| `/api/inspect/:inspectionId/findings/:findingId` | PATCH | `{ status: "confirmed" \| "rejected" }` | `DamageReport` |
 | `/api/invoice/:inspectionId` | GET | | `Invoice` |
 
-Photos are served to the UI by id; Boris decides the URL and adds it here.
+To show a photo, point an `<img>` at `/api/photos/<photoId>`; the ids are in
+`rental.photos[phase][slot]`. Errors are `{ error }` with 400, 404, 409, 413
+or 415. Upload JPEG or PNG (`accept="image/jpeg,image/png"`); HEIC gets a 415.
+
+## Data
+
+`data/rentals.json` is the seed and is never written. The app keeps its
+state in `data/rentals.local.json`, `data/photos/` and `data/inspections/`,
+all gitignored. Run `npm run reset-data` to go back to the seed, for example
+before a rehearsal.
+
+The machines have no hour meter to read or photograph; hours come only from
+the machine's software. `hourMeterAtCheckout` is the reading taken from it at
+check-out, and `POST /api/rentals/:id/return` fills `hourMeterAtReturn` from
+the (mocked) ISO 15143-3 feed. No screen asks the worker for hours.
 
 ## Notes for the AI owner
 
@@ -87,6 +108,10 @@ Photos are served to the UI by id; Boris decides the URL and adds it here.
   `tool_use` block comes back, retry once.
 - Send the BEFORE image, the text `BEFORE`, the AFTER image, the text `AFTER`,
   then the slot name, as base64 JPEG content blocks.
+- Storage for the inspect route (`@/lib/storage`): `getRental(id)`,
+  `readPhoto(rental.photos.checkout[slot])` / `readPhoto(rental.photos.return[slot])`
+  for the JPEG buffers, `saveReport(report)`, and `updateRental(id, r => { r.status = "inspected"; })`.
+  Use `newId("I")` for the report id.
 
 ## Git
 

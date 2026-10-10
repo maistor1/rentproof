@@ -8,7 +8,7 @@
 //   --photos DIR      folder with NN-<slot>-before.jpg / NN-<slot>-after.jpg
 //   --scenario NN     scenario prefix inside --photos (default 01)
 //   --skip-inspect    stop before the vision calls (no API cost)
-//   --keep            don't restore data/rentals.json afterwards
+//   --keep            don't restore rental data afterwards
 //
 // Slots without a photo get a generated placeholder, identical before and
 // after, so a run with no --photos should report zero findings.
@@ -33,8 +33,10 @@ const RENTAL = opt("rental", "R-1001");
 const PHOTOS = opt("photos", null);
 const SCENARIO = opt("scenario", "01");
 
-const RENTALS_FILE = path.join(process.cwd(), "data", "rentals.json");
-const BACKUP = RENTALS_FILE + ".smoke-backup";
+// The app writes rentals.local.json (rentals.json is the read-only seed).
+const RUNTIME_FILE = path.join(process.cwd(), "data", "rentals.local.json");
+const BACKUP = RUNTIME_FILE + ".smoke-backup";
+let hadRuntimeFile = false;
 
 let failed = 0;
 let skipped = 0;
@@ -113,7 +115,8 @@ async function main() {
     console.log(`Cannot reach ${BASE}. Start the app with \`npm run dev\` first.`);
     process.exit(2);
   }
-  if (existsSync(RENTALS_FILE)) await copyFile(RENTALS_FILE, BACKUP);
+  hadRuntimeFile = existsSync(RUNTIME_FILE);
+  if (hadRuntimeFile) await copyFile(RUNTIME_FILE, BACKUP);
 
   // 1. Rental exists
   const rental = await call("GET", `/api/rentals/${RENTAL}`);
@@ -169,11 +172,13 @@ async function main() {
     fail(`GET /api/photos/:id content-type is ${img.type}`);
   }
 
-  // 6. Record the return hour meter (triggers the mocked telematics)
-  const hours = rental.data.hourMeterAtCheckout + 37.5;
-  const ret = await call("PATCH", `/api/rentals/${RENTAL}`, { hourMeterAtReturn: hours });
-  if (check("PATCH /api/rentals/:id hourMeterAtReturn", ret)) {
-    if (ret.data.hourMeterAtReturn !== hours) fail("hourMeterAtReturn not saved");
+  // 6. Record the return; the mocked ISO 15143-3 feed supplies the hours
+  const ret = await call("POST", `/api/rentals/${RENTAL}/return`, {});
+  if (check("POST /api/rentals/:id/return", ret)) {
+    if (ret.data.status !== "returned") fail(`status is ${ret.data.status}, expected returned`);
+    if (!(ret.data.hourMeterAtReturn > rental.data.hourMeterAtCheckout)) {
+      fail("hourMeterAtReturn is not after the check-out reading");
+    }
     if (!ret.data.telematics?.CumulativeOperatingHours) fail("telematics snapshot missing");
   }
 
@@ -220,13 +225,12 @@ async function main() {
 try {
   await main();
 } finally {
-  if (existsSync(BACKUP)) {
-    if (!flag("keep")) {
-      await copyFile(BACKUP, RENTALS_FILE);
-      console.log("\nRestored data/rentals.json.");
-    }
-    await rm(BACKUP);
+  if (!flag("keep")) {
+    if (hadRuntimeFile) await copyFile(BACKUP, RUNTIME_FILE);
+    else await rm(RUNTIME_FILE, { force: true });
+    console.log("\nRestored rental data.");
   }
+  await rm(BACKUP, { force: true });
   console.log(`\n${failed ? "FAILED" : "OK"}: ${failed} failed, ${skipped} skipped`);
   process.exitCode = failed ? 1 : 0;
 }

@@ -32,7 +32,7 @@ node .claude/skills/rentproof-api-smoke/scripts/smoke.mjs --photos test-set/phot
 ```
 
 Other flags: `--base URL`, `--rental ID`, `--keep` (don't restore
-`data/rentals.json` afterwards).
+rental data afterwards).
 
 Default to `--skip-inspect` while working on backend or UI code. Only do full
 runs when the vision call or the report is what you are checking, because each
@@ -47,22 +47,23 @@ one spends API credit.
 4. The rental record holds all 12 photo ids afterwards. A failure here usually
    means parallel writes to `rentals.json` overwrote each other.
 5. `GET /api/photos/:id` serves `image/jpeg`.
-6. `PATCH /api/rentals/:id` saves `hourMeterAtReturn` and attaches the mocked
-   ISO 15143-3 telematics snapshot.
+6. `POST /api/rentals/:id/return` marks the rental returned and attaches the
+   mocked ISO 15143-3 snapshot with the return hours.
 7. `POST /api/inspect` returns six slot reports. With placeholder photos (no
    `--photos`) before and after are identical, so any visible finding is a
    false alarm.
 8. One `needs_review` finding, if any, is confirmed through
-   `PATCH /api/inspect/:reportId/findings/:findingId`.
+   `PATCH /api/inspect/:inspectionId/findings/:findingId`.
 9. `GET /api/invoice/:reportId` has one line per auto-flagged or confirmed
    finding, and the total equals the sum of the lines.
 
 ## Side effects
 
-Uploads write files to `data/photos/` and reports to `data/inspections/`. Both
-are gitignored. The script backs up `data/rentals.json`, which is tracked in
-git, and restores it when it finishes so your working tree stays clean. If a
-run is killed halfway, restore it with `git checkout data/rentals.json`.
+Uploads write files to `data/photos/` and reports to `data/inspections/`, and
+rental changes go to `data/rentals.local.json`. All three are gitignored. The
+script backs up the rental file and restores it afterwards, so the rental is
+`out` again for the next run. Photos and reports pile up; clear them with
+`npm run reset-data`.
 
 ## Reading the result
 
