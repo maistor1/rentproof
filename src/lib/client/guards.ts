@@ -1,5 +1,5 @@
 import { isSlot } from "@/lib/slots";
-import type { DamageReport, Photo } from "@/lib/types";
+import type { DamageReport, Photo, Rental } from "@/lib/types";
 
 // Minimal shape checks for API replies. Enough to fail with a clear message
 // instead of crashing deep inside a component.
@@ -27,5 +27,14 @@ export function isDamageReport(value: unknown): value is DamageReport {
     Array.isArray(value.findings) &&
     Array.isArray(value.retakeSlots) &&
     value.retakeSlots.every(isSlot)
+  );
+}
+
+export function isRental(value: unknown): value is Rental {
+  return (
+    isRecord(value) &&
+    typeof value.id === "string" &&
+    typeof value.status === "string" &&
+    isRecord(value.photos)
   );
 }

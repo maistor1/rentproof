@@ -10,9 +10,10 @@ async function readRentals(file: string): Promise<{ id: string }[] | undefined> 
   }
 }
 
-// The capture screens only write through /api/photos and /api/inspect, which
-// the specs mock. The pages still read rentals on the server, so add the e2e
-// rentals to the app's working copy and put it back afterwards.
+// The capture screens only write through /api/photos, the return route and
+// /api/inspect, which the specs mock. The pages still read rentals on the
+// server, so add the e2e rentals to the app's working copy and put it back
+// afterwards.
 export default async function globalSetup(): Promise<void> {
   await mkdir(E2E_DIR, { recursive: true });
   const local = await readRentals(LOCAL_FILE);
