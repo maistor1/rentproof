@@ -6,7 +6,7 @@ import { NextResponse, type NextRequest } from "next/server";
 // (local dev, tests). Any user name works; only the password is checked.
 export function proxy(request: NextRequest) {
 const password = process.env.DEMO_PASSWORD || "";
-if (password) return NextResponse.next();
+if (!password) return NextResponse.next();
 
   const header = request.headers.get("authorization") ?? "";
   if (header.startsWith("Basic ")) {
