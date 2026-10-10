@@ -46,5 +46,6 @@ next-env.d.ts
 !/data/photos/.gitkeep
 /data/inspections/*
 !/data/inspections/.gitkeep
+/data/rentals.local.json
 /test-set/photos/*
 !/test-set/photos/.gitkeep
