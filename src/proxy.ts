@@ -5,7 +5,7 @@ import { NextResponse, type NextRequest } from "next/server";
 // can't run vision calls on our Anthropic key. Off when DEMO_PASSWORD is unset
 // (local dev, tests). Any user name works; only the password is checked.
 export function proxy(request: NextRequest) {
-  const password = process.env.DEMO_PASSWORD;
+const password = process.env.DEMO_PASSWORD || "";
 if (password) return NextResponse.next();
 
   const header = request.headers.get("authorization") ?? "";
