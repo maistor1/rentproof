@@ -10,10 +10,14 @@ export const PHOTO_FILE = path.join(E2E_DIR, "photo.jpg");
 export const SLOTS = ["front", "rear", "left_side", "right_side", "operator_cab", "attachment"] as const;
 
 // R-E2E-OUT: fresh, for check-out. R-E2E-RET: check-out done, for return.
+// R-E2E-DONE: returned and inspected, for the evidence page.
 export const CHECKOUT_RENTAL = "R-E2E-OUT";
 export const RETURN_RENTAL = "R-E2E-RET";
+export const DONE_RENTAL = "R-E2E-DONE";
 
-function rental(id: string, checkoutPhotos: Record<string, string>) {
+const photoIds = (prefix: string) => Object.fromEntries(SLOTS.map((s) => [s, `${prefix}-${s}`]));
+
+function rental(id: string, checkoutPhotos: Record<string, string>, returnPhotos: Record<string, string> = {}) {
   return {
     id,
     machine: { id: "M-07", name: "Mini excavator (e2e)", model: "CAT 301.7 CR", serialNumber: "E2E0301707" },
@@ -22,15 +26,16 @@ function rental(id: string, checkoutPhotos: Record<string, string>) {
     checkoutAt: "2026-10-10T08:00:00.000Z",
     returnAt: null,
     hourMeterAtCheckout: 1240.5,
-    hourMeterAtReturn: id === RETURN_RENTAL ? 1278 : null,
+    hourMeterAtReturn: id === CHECKOUT_RENTAL ? null : 1278,
     telematics: null,
-    photos: { checkout: checkoutPhotos, return: {} },
+    photos: { checkout: checkoutPhotos, return: returnPhotos },
   };
 }
 
 export const E2E_RENTALS = [
   rental(CHECKOUT_RENTAL, {}),
-  rental(RETURN_RENTAL, Object.fromEntries(SLOTS.map((s) => [s, `E2E-${s}`]))),
+  rental(RETURN_RENTAL, photoIds("E2E")),
+  rental(DONE_RENTAL, photoIds("E2E"), photoIds("E2E-RET")),
 ];
 
 // The report the return spec ends on (mocked inspect, round 2). Written to the
@@ -64,4 +69,19 @@ export const E2E_REPORT = {
     },
   ],
   retakeSlots: [],
+};
+
+// A finished inspection: one auto-flagged scratch (charged) and one rejected
+// dent (listed as not charged).
+export const DONE_REPORT_ID = "RPT-E2E-DONE";
+export const DONE_REPORT_FILE = path.join(process.cwd(), "data", "inspections", `${DONE_REPORT_ID}.json`);
+
+export const DONE_REPORT = {
+  ...E2E_REPORT,
+  id: DONE_REPORT_ID,
+  rentalId: DONE_RENTAL,
+  findings: [
+    { ...E2E_REPORT.findings[0], id: "F-E2E-A", confidence: 0.9, status: "auto_flagged" },
+    { ...E2E_REPORT.findings[0], id: "F-E2E-R", slot: "rear", type: "dent", location: "counterweight", status: "rejected" },
+  ],
 };
