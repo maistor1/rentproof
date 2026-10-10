@@ -123,3 +123,15 @@ body {
     transition-duration: 1ms !important;
   }
 }
+
+/* Evidence page (RP-13) prints to PDF from the browser. */
+@page {
+  size: A4;
+  margin: 14mm;
+}
+
+@media print {
+  body {
+    print-color-adjust: exact;
+  }
+}
