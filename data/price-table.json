@@ -1,0 +1,30 @@
+{
+  "_note": "SAMPLE PRICES for the demo. Say so on stage.",
+  "currency": "EUR",
+  "prices": {
+    "scratch/minor": 45,
+    "scratch/moderate": 120,
+    "scratch/severe": 280,
+    "dent/minor": 90,
+    "dent/moderate": 250,
+    "dent/severe": 600,
+    "crack/minor": 150,
+    "crack/moderate": 400,
+    "crack/severe": 950,
+    "bent_or_broken/minor": 120,
+    "bent_or_broken/moderate": 350,
+    "bent_or_broken/severe": 900,
+    "missing_part/minor": 60,
+    "missing_part/moderate": 200,
+    "missing_part/severe": 700,
+    "leak/minor": 100,
+    "leak/moderate": 300,
+    "leak/severe": 800,
+    "glass_or_light/minor": 80,
+    "glass_or_light/moderate": 220,
+    "glass_or_light/severe": 500,
+    "other/minor": 50,
+    "other/moderate": 150,
+    "other/severe": 400
+  }
+}

@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+!.env.example
+
+# runtime data (photos and reports stay on the demo laptop)
+/data/photos/*
+!/data/photos/.gitkeep
+/data/inspections/*
+!/data/inspections/.gitkeep
+/test-set/photos/*
+!/test-set/photos/.gitkeep
