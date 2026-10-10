@@ -29,3 +29,32 @@ export function applyRules(
 
   return { rentalId, slots, findings, retakeSlots };
 }
+
+// Staff decisions on review-band findings. needs_review undoes a decision.
+export const REVIEW_STATUSES = ["confirmed", "rejected", "needs_review"] as const;
+export type ReviewStatus = (typeof REVIEW_STATUSES)[number];
+
+export type ReviewResult =
+  | { ok: true; report: DamageReport }
+  | { ok: false; reason: "not_found" | "not_reviewable" };
+
+// Only findings that landed in the review band can be confirmed or rejected.
+// Auto-flagged and hidden ones are the rules' call, not the reviewer's.
+export function reviewFinding(
+  report: DamageReport,
+  findingId: string,
+  status: ReviewStatus,
+): ReviewResult {
+  const finding = report.findings.find((f) => f.id === findingId);
+  if (!finding) return { ok: false, reason: "not_found" };
+  if (!(REVIEW_STATUSES as readonly string[]).includes(finding.status)) {
+    return { ok: false, reason: "not_reviewable" };
+  }
+  return {
+    ok: true,
+    report: {
+      ...report,
+      findings: report.findings.map((f) => (f.id === findingId ? { ...f, status } : f)),
+    },
+  };
+}

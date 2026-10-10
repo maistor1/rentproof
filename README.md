@@ -74,6 +74,7 @@ API surface everyone can rely on:
 | `/api/rentals/:id` | GET | | `Rental` |
 | `/api/photos` | POST | form: `rentalId`, `slot`, `phase`, `file` | `Photo` |
 | `/api/inspect` | POST | `{ rentalId }` | `DamageReport` |
+| `/api/inspect/:reportId/findings/:findingId` | PATCH | `{ status: "confirmed" \| "rejected" \| "needs_review" }` | `DamageReport` |
 | `/api/invoice/:inspectionId` | GET | | `Invoice` |
 
 Photos are served to the UI by id; Boris decides the URL and adds it here.

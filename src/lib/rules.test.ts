@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { applyRules, statusFor } from "@/lib/rules";
-import type { Finding, SlotReport } from "@/lib/types";
+import { applyRules, reviewFinding, statusFor } from "@/lib/rules";
+import type { DamageReport, Finding, SlotReport } from "@/lib/types";
 
 const finding = (confidence: number): Finding => ({
   type: "scratch",
@@ -47,5 +47,33 @@ describe("applyRules", () => {
   it("keeps the raw slot reports for the accuracy log", () => {
     const slots = [slot("front", [0.2])];
     expect(applyRules("R-1", slots)).toMatchObject({ rentalId: "R-1", slots });
+  });
+});
+
+describe("reviewFinding", () => {
+  // front-1 auto_flagged, front-2 needs_review, front-3 hidden
+  const report: DamageReport = {
+    id: "rep",
+    createdAt: "2026-10-10T00:00:00.000Z",
+    model: "test",
+    ...applyRules("R-1", [slot("front", [0.9, 0.6, 0.2])]),
+  };
+
+  it("confirms, rejects and undoes a review-band finding", () => {
+    for (const status of ["confirmed", "rejected", "needs_review"] as const) {
+      const r = reviewFinding(report, "front-2", status);
+      expect(r.ok && r.report.findings[1].status).toBe(status);
+    }
+  });
+
+  it("does not change the stored report in place", () => {
+    reviewFinding(report, "front-2", "confirmed");
+    expect(report.findings[1].status).toBe("needs_review");
+  });
+
+  it("refuses findings outside the review band and unknown ids", () => {
+    expect(reviewFinding(report, "front-1", "rejected")).toEqual({ ok: false, reason: "not_reviewable" });
+    expect(reviewFinding(report, "front-3", "confirmed")).toEqual({ ok: false, reason: "not_reviewable" });
+    expect(reviewFinding(report, "rear-9", "confirmed")).toEqual({ ok: false, reason: "not_found" });
   });
 });
