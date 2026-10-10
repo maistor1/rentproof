@@ -4,7 +4,7 @@
 //   node .claude/skills/rentproof-api-smoke/scripts/smoke.mjs [options]
 //
 //   --base URL        server (default http://localhost:3000)
-//   --rental ID       rental to use (default R-1001)
+//   --rental ID       existing rental to use (default: create a fresh one)
 //   --photos DIR      folder with NN-<slot>-before.jpg / NN-<slot>-after.jpg
 //   --scenario NN     scenario prefix inside --photos (default 01)
 //   --skip-inspect    stop before the vision calls (no API cost)
@@ -29,7 +29,7 @@ const opt = (name, fallback) => {
 const flag = (name) => args.includes(`--${name}`);
 
 const BASE = opt("base", "http://localhost:3000");
-const RENTAL = opt("rental", "R-1001");
+let RENTAL = opt("rental", null);
 const PHOTOS = opt("photos", null);
 const SCENARIO = opt("scenario", "01");
 
@@ -107,7 +107,7 @@ async function upload(slot, phase) {
 }
 
 async function main() {
-  console.log(`RentProof smoke test against ${BASE}, rental ${RENTAL}\n`);
+  console.log(`RentProof smoke test against ${BASE}, rental ${RENTAL ?? "(new)"}\n`);
 
   try {
     await fetch(BASE);
@@ -117,6 +117,20 @@ async function main() {
   }
   hadRuntimeFile = existsSync(RUNTIME_FILE);
   if (hadRuntimeFile) await copyFile(RUNTIME_FILE, BACKUP);
+
+  // 0. Create a rental unless one was given; a bad body is a 400, not a 500
+  if (!RENTAL) {
+    const badNew = await call("POST", "/api/rentals", { machine: { name: "x" } });
+    if (badNew.status === 400) pass("POST /api/rentals rejects missing fields");
+    else fail(`POST /api/rentals rejects missing fields: expected 400, got ${badNew.status}`);
+    const created = await call("POST", "/api/rentals", {
+      machine: { name: "Smoke test excavator", model: "CAT 301.7 CR", serialNumber: "SMOKE0001" },
+      customer: { name: "Smoke Test GmbH", email: "smoke@rentproof.example" },
+    });
+    if (!check("POST /api/rentals", created, 201)) return;
+    RENTAL = created.data.id;
+    console.log(`      created ${RENTAL}, check-out hours ${created.data.hourMeterAtCheckout}`);
+  }
 
   // 1. Rental exists
   const rental = await call("GET", `/api/rentals/${RENTAL}`);
