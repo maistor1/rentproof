@@ -133,9 +133,13 @@ Attention rules (shared with the report pages, tokens in `globals.css`):
 - Progress (machine map + six segments) is always visible while capturing.
 - Motion only on state changes, 150–250 ms; reduced-motion users get 1 ms.
 
-Testing on a phone: the live camera needs HTTPS. Run `npm run dev:https`, set
-`DEV_ORIGINS=<laptop LAN IP>` so the dev server accepts the phone, and accept the
-certificate warning. Without HTTPS the return screen falls back to the reference
+Testing on a phone: the live camera needs HTTPS. Run `npm run dev:phone`. It
+finds the laptop's Wi-Fi address, makes a certificate for it (with mkcert, no
+password; a new address gets a new certificate), sets `DEV_ORIGINS` and prints
+the URL to open on the phone, e.g. `https://192.168.68.119:3000`. Accept the
+certificate warning once. Pass `-- --ip <address>` if it picks the wrong
+network. If mkcert is missing, `brew install mkcert` or run `npm run dev:https`
+once to download it. Without HTTPS the return screen falls back to the reference
 photo plus the phone's camera app.
 
 ```bash
