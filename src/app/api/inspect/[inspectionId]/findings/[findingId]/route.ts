@@ -1,7 +1,8 @@
 import { errorResponse, jsonError } from "@/lib/http";
 import { reviewFinding } from "@/lib/review";
 
-// RP-12 review buttons. Body: { status: "confirmed" | "rejected" }.
+// RP-12 review buttons. Body: { status: "confirmed" | "rejected" | "needs_review" },
+// where needs_review undoes a decision.
 // Returns the updated DamageReport.
 export async function PATCH(
   req: Request,

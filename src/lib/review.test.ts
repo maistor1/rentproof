@@ -24,6 +24,12 @@ describe("reviewFinding", () => {
     expect(await status("F-confirmed")).toBe("rejected");
   });
 
+  it("undoes a decision by setting needs_review again", async () => {
+    await saveReport(sampleReport());
+    await reviewFinding("I-test", "F-confirmed", "needs_review");
+    expect(await status("F-confirmed")).toBe("needs_review");
+  });
+
   it.each(["F-auto", "F-hidden"])("refuses to change %s (409)", async (id) => {
     await saveReport(sampleReport());
     await expect(reviewFinding("I-test", id, "rejected")).rejects.toMatchObject({ status: 409 });

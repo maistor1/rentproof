@@ -80,7 +80,7 @@ API surface everyone can rely on:
 | `/api/photos` | POST | form: `rentalId`, `slot`, `phase`, `file` | `Photo` |
 | `/api/photos/:photoId` | GET | | JPEG |
 | `/api/inspect` | POST | `{ rentalId }` | `DamageReport` |
-| `/api/inspect/:inspectionId/findings/:findingId` | PATCH | `{ status: "confirmed" \| "rejected" }` | `DamageReport` |
+| `/api/inspect/:inspectionId/findings/:findingId` | PATCH | `{ status: "confirmed" \| "rejected" \| "needs_review" }` | `DamageReport` (needs_review undoes) |
 | `/api/invoice/:inspectionId` | GET | | `Invoice` |
 
 To show a photo, point an `<img>` at `/api/photos/<photoId>`; the ids are in

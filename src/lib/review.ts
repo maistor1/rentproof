@@ -3,9 +3,10 @@ import { HttpError } from "@/lib/http";
 import { updateReport } from "@/lib/storage";
 import type { DamageReport, FindingStatus } from "@/lib/types";
 
-export type ReviewDecision = "confirmed" | "rejected";
+// needs_review undoes an earlier decision.
+export type ReviewDecision = "confirmed" | "rejected" | "needs_review";
 
-const DECISIONS: readonly string[] = ["confirmed", "rejected"];
+const DECISIONS: readonly string[] = ["confirmed", "rejected", "needs_review"];
 // Staff decide only the 0.50-0.79 band. auto_flagged and hidden are set by the
 // confidence rules and stay that way.
 const REVIEWABLE: readonly FindingStatus[] = ["needs_review", "confirmed", "rejected"];
@@ -16,7 +17,7 @@ export async function reviewFinding(
   decision: unknown,
 ): Promise<DamageReport> {
   if (typeof decision !== "string" || !DECISIONS.includes(decision)) {
-    throw new HttpError(400, "status must be confirmed or rejected");
+    throw new HttpError(400, "status must be confirmed, rejected or needs_review");
   }
   const report = await updateReport(reportId, (r) => {
     const finding = r.findings.find((f) => f.id === findingId);
