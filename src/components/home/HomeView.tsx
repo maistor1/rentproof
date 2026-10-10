@@ -18,22 +18,22 @@ function RentalCard({ rental, reportId }: HomeItem) {
   const step = nextStep(rental, reportId);
   return (
     <li className="flex flex-col gap-3 rounded-xl border border-zinc-200 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="truncate text-body font-semibold">{rental.machine.name}</h2>
-          <p className="truncate text-body text-zinc-700">{rental.customer.name}</p>
-          <p className="truncate text-meta text-zinc-600">
-            {rental.machine.model} · S/N {rental.machine.serialNumber} · {rental.id}
-          </p>
-        </div>
+      <div className="flex flex-col items-start gap-2">
         <span
-          className={`flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-meta font-medium ${
+          className={`flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-meta font-medium ${
             step.status.done ? "border-done text-done-ink" : "border-zinc-300 text-zinc-700"
           }`}
         >
           <span aria-hidden className={`size-2 rounded-full ${step.status.done ? "bg-done" : "bg-zinc-400"}`} />
           {step.status.label}
         </span>
+        <div className="w-full min-w-0">
+          <h2 className="truncate text-body font-semibold">{rental.machine.name}</h2>
+          <p className="truncate text-body text-zinc-700">{rental.customer.name}</p>
+          <p className="text-meta break-words text-zinc-600">
+            {rental.machine.model} · S/N {rental.machine.serialNumber} · {rental.id}
+          </p>
+        </div>
       </div>
       <Link href={step.primary.href} className={STEP_CLASS}>
         {step.primary.label}
