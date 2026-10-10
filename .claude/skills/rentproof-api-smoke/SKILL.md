@@ -34,6 +34,12 @@ node .claude/skills/rentproof-api-smoke/scripts/smoke.mjs --photos test-set/phot
 Other flags: `--base URL`, `--rental ID` (use an existing rental instead of
 creating one), `--keep` (don't restore rental data afterwards).
 
+Against the Render deploy, pass the demo password in `SMOKE_PASSWORD`:
+
+```bash
+SMOKE_PASSWORD=... node .claude/skills/rentproof-api-smoke/scripts/smoke.mjs --base https://rentproof.onrender.com --skip-inspect
+```
+
 Default to `--skip-inspect` while working on backend or UI code. Only do full
 runs when the vision call or the report is what you are checking, because each
 one spends API credit.

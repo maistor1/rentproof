@@ -10,6 +10,8 @@
 //   --skip-inspect    stop before the vision calls (no API cost)
 //   --keep            don't restore rental data afterwards
 //
+// Set SMOKE_PASSWORD to the demo password when --base is the Render deploy.
+//
 // Slots without a photo get a generated placeholder, identical before and
 // after, so a run with no --photos should report zero findings.
 // Routes that answer 501 are reported as SKIP, not FAIL.
@@ -32,6 +34,9 @@ const BASE = opt("base", "http://localhost:3000");
 let RENTAL = opt("rental", null);
 const PHOTOS = opt("photos", null);
 const SCENARIO = opt("scenario", "01");
+const AUTH = process.env.SMOKE_PASSWORD
+  ? { Authorization: `Basic ${Buffer.from(`smoke:${process.env.SMOKE_PASSWORD}`).toString("base64")}` }
+  : {};
 
 // The app writes rentals.local.json (rentals.json is the read-only seed).
 const RUNTIME_FILE = path.join(process.cwd(), "data", "rentals.local.json");
@@ -51,11 +56,11 @@ const skip = (msg) => {
 };
 
 async function call(method, url, body) {
-  const init = { method };
+  const init = { method, headers: { ...AUTH } };
   if (body instanceof FormData) init.body = body;
   else if (body !== undefined) {
     init.body = JSON.stringify(body);
-    init.headers = { "Content-Type": "application/json" };
+    init.headers["Content-Type"] = "application/json";
   }
   const res = await fetch(BASE + url, init);
   const type = res.headers.get("content-type") ?? "";
@@ -110,7 +115,7 @@ async function main() {
   console.log(`RentProof smoke test against ${BASE}, rental ${RENTAL ?? "(new)"}\n`);
 
   try {
-    await fetch(BASE);
+    await fetch(BASE, { headers: AUTH });
   } catch {
     console.log(`Cannot reach ${BASE}. Start the app with \`npm run dev\` first.`);
     process.exit(2);
