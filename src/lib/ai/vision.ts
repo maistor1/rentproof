@@ -8,7 +8,7 @@ export const VISION_MODEL = "claude-sonnet-5-5";
 
 const client = new Anthropic();
 
-function jpeg(data: Buffer): Anthropic.ImageBlockParam {
+function jpeg(data: Buffer): Anthropic.Beta.BetaImageBlockParam {
   return {
     type: "image",
     source: { type: "base64", media_type: "image/jpeg", data: data.toString("base64") },
@@ -22,7 +22,7 @@ export async function compareSlot(
   beforeJpeg: Buffer,
   afterJpeg: Buffer,
 ): Promise<SlotReport> {
-  const content: Anthropic.ContentBlockParam[] = [
+  const content: Anthropic.Beta.BetaContentBlockParam[] = [
     jpeg(beforeJpeg),
     { type: "text", text: "BEFORE" },
     jpeg(afterJpeg),
@@ -31,9 +31,12 @@ export async function compareSlot(
   ];
 
   // Forced tool_choice is a 400 on Sonnet 5.5, so use auto and retry once if
-  // the model answers without calling the tool.
+  // the model answers without calling the tool. If Sonnet declines on policy
+  // grounds, the API re-runs the call on its default fallback model.
   for (let attempt = 1; attempt <= 2; attempt++) {
-    const response = await client.messages.create({
+    const response = await client.beta.messages.create({
+      betas: ["server-side-fallback-2026-07-01"],
+      fallbacks: "default",
       model: VISION_MODEL,
       max_tokens: 16000,
       system: SYSTEM_PROMPT,
@@ -47,7 +50,7 @@ export async function compareSlot(
     }
 
     const call = response.content.find(
-      (b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === REPORT_DAMAGE_TOOL.name,
+      (b): b is Anthropic.Beta.BetaToolUseBlock => b.type === "tool_use" && b.name === REPORT_DAMAGE_TOOL.name,
     );
     if (call) return normalize(slot, call.input as SlotReport);
   }
