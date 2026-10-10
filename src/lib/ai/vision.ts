@@ -6,7 +6,11 @@ import { REPORT_DAMAGE_TOOL } from "./reportDamageTool";
 
 export const VISION_MODEL = "claude-sonnet-5-5";
 
-const client = new Anthropic();
+// Keys not scoped to a workspace must name one on every request.
+const workspaceId = process.env.ANTHROPIC_WORKSPACE_ID;
+const client = new Anthropic(
+  workspaceId ? { defaultHeaders: { "anthropic-workspace-id": workspaceId } } : {},
+);
 
 function jpeg(data: Buffer): Anthropic.Beta.BetaImageBlockParam {
   return {
