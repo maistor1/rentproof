@@ -1,0 +1,19 @@
+[
+  {
+    "id": "R-1001",
+    "machine": {
+      "id": "M-07",
+      "name": "Mini excavator (demo object)",
+      "model": "CAT 301.7 CR",
+      "serialNumber": "DEMO0301707"
+    },
+    "customer": { "name": "Nordbau GmbH", "email": "site@nordbau.example" },
+    "status": "out",
+    "checkoutAt": "2026-10-10T08:00:00.000Z",
+    "returnAt": null,
+    "hourMeterAtCheckout": 1240.5,
+    "hourMeterAtReturn": null,
+    "telematics": null,
+    "photos": { "checkout": {}, "return": {} }
+  }
+]

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import rentals from "../../data/rentals.json";
+import rentals from "@/test/seed/rentals.json";
 import { inspectRental, missingSlots } from "@/lib/inspect";
 import { SLOTS, type Rental, type Slot, type SlotReport } from "@/lib/types";
 

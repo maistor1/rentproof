@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import rentals from "../../data/rentals.json";
+import rentals from "@/test/seed/rentals.json";
 import { mockSnapshot } from "@/lib/telematics";
 import type { Rental } from "@/lib/types";
 
